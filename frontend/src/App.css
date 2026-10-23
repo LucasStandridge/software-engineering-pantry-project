@@ -1,0 +1,12 @@
+.navLink{
+  color: rgb(30, 148, 19);
+  text-decoration: underline;
+  font-family:'DarkSoulsFont';
+  margin-right: 5px
+}
+
+.navBar{
+  /* display: flex;
+  justify-content: flex-end; */
+  padding: 20px;
+}
