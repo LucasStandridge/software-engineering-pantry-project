@@ -1,0 +1,1 @@
+from backend.models.inventory_item import InventoryItem
