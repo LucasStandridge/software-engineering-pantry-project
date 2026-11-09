@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Link, NavLink, useNavigate } from 'react-
 import Pantry from './Pantry.jsx';
 import Recipes from './Recipes.jsx';
 import Home from './Home.jsx';
+import Login from './pages/login.jsx';
 
 function App() {
 
@@ -18,6 +19,7 @@ function App() {
 
         <Routes>
           <Route path='/' element={<Home/>}></Route>
+          <Route path="/login" element={<Login />} />
           <Route path='/pantry' element={<Pantry/>}></Route>
           <Route path='/recipes' element={<Recipes/>}></Route>
         </Routes>
