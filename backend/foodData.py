@@ -1,6 +1,10 @@
+import os
 import requests
+from dotenv import load_dotenv
 
-API_KEY: str = "tc9WwRJTTFcWdcCRhhb6K8MTJfKqkTKN7BQLkqWd"
+load_dotenv()
+
+API_KEY = os.environ.get("USDA_API_KEY")
 BASE: str = "https://api.nal.usda.gov/fdc/v1"
 
 """
