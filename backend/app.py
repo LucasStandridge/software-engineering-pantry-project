@@ -55,3 +55,27 @@ def create_item():
         jsonify(item=g_list.read_item_by_id(item_id), created=created),
         (201 if created else 200),
     )
+
+@app.post("/api/items/<item_id>/decrement")
+def decrement_item_route(item_id):
+    try:
+        new_quantity = g_list.decrement_item(item_id)
+    except KeyError: 
+        return jsonify(error="Item not found"), 404
+    return (jsonify( quantity=new_quantity), 200)
+
+@app.post("/api/items/<item_id>/increment")
+def increment_item_route(item_id):
+    try:
+        new_quantity = g_list.increment_item(item_id)
+    except KeyError:
+        return jsonify(error="Item not found"), 404
+    return (jsonify(quantity = new_quantity), 200)
+
+@app.delete("/api/items/<item_id>/delete")
+def remove_item_route(item_id):
+    try:
+        g_list.remove_item(item_id)
+    except KeyError:
+        return jsonify(error="Item not found"), 404
+    return "", 204
