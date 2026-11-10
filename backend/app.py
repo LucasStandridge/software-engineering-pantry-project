@@ -1,8 +1,10 @@
 from flask import Flask, jsonify, request
 
-from GroceryList import GroceryList
+from backend.GroceryList import GroceryList
+from backend.errors import register_error_handlers
 
 app = Flask(__name__)
+register_error_handlers(app)
 
 # One list shared across all requests and stored in process memory
 # Needs persistence and ability to create multiple lists in future sprints
