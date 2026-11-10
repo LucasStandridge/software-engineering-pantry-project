@@ -13,8 +13,8 @@ class ListItem():
     """One row on the grocery list.
 
     Fields:
-        name:            The cleaned text the user typed\
-        data:            The matched food data
+        name:            The cleaned text the user typed
+        data:            Dictionary containing food data. Should include canonical name, amount per-unit, nutrition info, and expiration date if provided
         quantity:        How many of this entry the user wants. Always >= 1.
                          NOTE: Does not distinguish size yet. 1 Gallon of milk
                          is treated == to a Half Gallon for now
