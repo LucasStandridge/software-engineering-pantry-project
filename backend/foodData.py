@@ -32,7 +32,7 @@ Things to improve
         - Could include filtering by a brand
         - Could also filter for unbranded by default if no brand is given in order to get a generic result
         - Could also return a list of results and be used to display options for the user to choose from
-    - Error handling is very basic, just prints the error and returns None
+    - Error handling is very basic, just returns None to avoid crashes.
 """
 
 def parse_food_data(food_item: dict) -> dict:
@@ -88,7 +88,6 @@ def summarize_food(fdcId: int, ) -> dict:
         return parse_food_data(food_item)
     
     except Exception as e:
-        print(f"Error occurred while summarizing food: {e}")
         return None
 
 
@@ -100,6 +99,5 @@ def get_food_id(food_name: str) -> int:
         return r["foods"][0]["fdcId"]
 
     except Exception as e:
-        print(f"Error occurred while searching for food: {e}")
         return None
 
