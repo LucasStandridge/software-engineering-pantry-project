@@ -1,7 +1,7 @@
 import pytest
 from flask import Flask, abort
 from backend.errors import register_error_handlers
-
+import logging
 
 @pytest.fixture
 def client():
@@ -70,3 +70,11 @@ def test_bad_request(client):
             "message": "The request is invalid."
         }
     }
+
+def test_internal_server_error_is_logged(client, caplog):
+    """Verify unexpected server errors are logged."""
+    with caplog.at_level(logging.ERROR):
+        response = client.get("/api/test-server-error")
+
+    assert response.status_code == 500
+    assert "Internal server error" in caplog.text
