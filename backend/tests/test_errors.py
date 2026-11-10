@@ -78,3 +78,18 @@ def test_internal_server_error_is_logged(client, caplog):
 
     assert response.status_code == 500
     assert "Internal server error" in caplog.text
+
+def test_actual_app_returns_standardized_404():
+    """Verify centralized error handlers are registered in real app."""
+    from backend.app import app
+
+    client = app.test_client()
+    response = client.get("/api/nonexistent")
+
+    assert response.status_code == 404
+    assert response.get_json() == {
+        "error": {
+            "code": "NOT_FOUND",
+            "message": "The requested resource was not found."
+        }
+    }
