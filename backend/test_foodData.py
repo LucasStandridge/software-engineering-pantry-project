@@ -8,10 +8,12 @@ from foodData import parse_food_data, summarize_food, get_food_id, API_KEY, BASE
 
 class TestParseFoodData(unittest.TestCase):
 
-    def test_parse_food_data_outputs_correct_summary(self):
+    # Test if dict strucured with branded structure parses correctly
+    def test_parse_food_data_correct_summary_for_branded(self):
         # Sample food item data
         food_item = {
             "description": "Sample Food",
+            "brandedFoodCategory": "Sample Category",
             "brandOwner": "Sample Brand",
             "foodNutrients": [
                 {"nutrient": {"number": '203'}, "amount": 10.0},  # Protein
@@ -24,6 +26,7 @@ class TestParseFoodData(unittest.TestCase):
 
         expected_summary = {
             "canonical_name": "Sample Food",
+            "food_category": "Sample Category",
             "brand": "Sample Brand",
             "nutrition": {
                 "calories": 150.0,
@@ -36,11 +39,42 @@ class TestParseFoodData(unittest.TestCase):
 
         self.assertEqual(parse_food_data(food_item), expected_summary)
 
+    # Test if dict with unbranded structure parses correctly
+    def test_parse_food_data_correct_summary_for_unbranded(self):
+            # Sample food item data
+            food_item = {
+                "description": "Sample Food",
+                "foodCategory": {"description": "Sample Category"},
+                "foodNutrients": [
+                    {"nutrient": {"number": '203'}, "amount": 10.0},  # Protein
+                    {"nutrient": {"number": '204'}, "amount": 5.0},   # Fat
+                    {"nutrient": {"number": '269'}, "amount": 2.0},   # Total Sugars
+                    {"nutrient": {"number": '205'}, "amount": 20.0},  # Carbohydrates
+                    {"nutrient": {"number": '208'}, "amount": 150.0}  # Calories
+                ]
+            }
+    
+            expected_summary = {
+                "canonical_name": "Sample Food",
+                "food_category": "Sample Category",
+                "brand": None,
+                "nutrition": {
+                    "calories": 150.0,
+                    "protein": 10.0,
+                    "total_sugars": 2.0,
+                    "carbohydrates": 20.0,
+                    "fat": 5.0
+                }
+            }
+    
+            self.assertEqual(parse_food_data(food_item), expected_summary)
+
+    # Test that it correctly parses nutrients, leaving as None if it isn't in the dict
     def test_parse_food_data_handles_missing_nutrients(self):
+
         # Sample food item data with missing nutrients
         food_item = {
             "description": "Sample Food",
-            "brandOwner": "Sample Brand",
             "foodNutrients": [
                 {"nutrient": {"number": '203'}, "amount": 10.0},  # Protein
                 # Missing Fat, Total Sugars, Carbohydrates, Calories
@@ -49,7 +83,8 @@ class TestParseFoodData(unittest.TestCase):
 
         expected_summary = {
             "canonical_name": "Sample Food",
-            "brand": "Sample Brand",
+            "food_category": None,
+            "brand": None,
             "nutrition": {
                 "calories": None,
                 "protein": 10.0,
@@ -61,40 +96,44 @@ class TestParseFoodData(unittest.TestCase):
 
         self.assertEqual(parse_food_data(food_item), expected_summary)
 
-    def test_parse_food_data_handles_no_brand_owner(self):
-        # Sample food item data with no brand owner
-        food_item = {
-            "description": "Sample Food",
-            "foodNutrients": [
-                {"nutrient": {"number": '203'}, "amount": 10.0},  # Protein
-                {"nutrient": {"number": '204'}, "amount": 5.0},   # Fat
-                {"nutrient": {"number": '269'}, "amount": 2.0},   # Total Sugars
-                {"nutrient": {"number": '205'}, "amount": 20.0},  # Carbohydrates
-                {"nutrient": {"number": '208'}, "amount": 150.0}  # Calories
-            ]
-        }
+    # test if food_category remains None if nothing is in the response
+    def test_parse_food_data_leaves_food_category_none(self):
+                # Sample food item data
+                food_item = {
+                    "description": "Sample Food",
+                    "brandOwner": "Sample Brand",
+                    "foodNutrients": [
+                        {"nutrient": {"number": '203'}, "amount": 10.0},  # Protein
+                        {"nutrient": {"number": '204'}, "amount": 5.0},   # Fat
+                        {"nutrient": {"number": '269'}, "amount": 2.0},   # Total Sugars
+                        {"nutrient": {"number": '205'}, "amount": 20.0},  # Carbohydrates
+                        {"nutrient": {"number": '208'}, "amount": 150.0}  # Calories
+                    ]
+                }
+        
+                expected_summary = {
+                    "canonical_name": "Sample Food",
+                    "food_category": None,
+                    "brand": "Sample Brand",
+                    "nutrition": {
+                        "calories": 150.0,
+                        "protein": 10.0,
+                        "total_sugars": 2.0,
+                        "carbohydrates": 20.0,
+                        "fat": 5.0
+                    }
+                }
+        
+                self.assertEqual(parse_food_data(food_item), expected_summary)
 
-        expected_summary = {
-            "canonical_name": "Sample Food",
-            "brand": None,
-            "nutrition": {
-                "calories": 150.0,
-                "protein": 10.0,
-                "total_sugars": 2.0,
-                "carbohydrates": 20.0,
-                "fat": 5.0
-            }
-        }
-
-        self.assertEqual(parse_food_data(food_item), expected_summary)
-
-
+# Pretty much just tests that the API is calling correctly, does not test logic of parsing results
 class TestSummarizeFood(unittest.TestCase):
 
     def setUp(self):
         # Sample API response for a food item (American cheese)
         self.food_item = {
             "description": "AMERICAN CHEESE",
+            "brandedFoodCategory": "Cheese",
             "brandOwner": "World Cheese Co. Inc.",
             "foodNutrients": [
                 {"nutrient": {"number": '203'}, "amount": 21.05},  # Protein
@@ -107,6 +146,7 @@ class TestSummarizeFood(unittest.TestCase):
 
         self.expected_summary = {
             "canonical_name": "AMERICAN CHEESE",
+            "food_category": "Cheese",
             "brand": "World Cheese Co. Inc.",
             "nutrition": {
                 "calories": 368.0,
@@ -144,7 +184,7 @@ class TestGetFoodId(unittest.TestCase):
 
     @patch("foodData.requests.get")
     def test_get_food_id_returns_first_result_id(self, mock_get):
-        # Search returns multiple results, only the first should be used
+        # Only choose the first item found after searching
         mock_get.return_value.json.return_value = {
             "foods": [
                 {"fdcId": 2054688, "description": "AMERICAN CHEESE"},
