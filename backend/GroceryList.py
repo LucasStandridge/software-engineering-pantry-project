@@ -2,7 +2,7 @@
 Callers should route methods through GroceryList instead of touching items directly
 """
 
-from ListItem import ListItem
+from backend.ListItem import ListItem
 
 """Trim the ends and outside whitespace. Keeps capitalization
 Case insensitive comparison happens within find_duplicate_index
