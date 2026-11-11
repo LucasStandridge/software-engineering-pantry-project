@@ -103,5 +103,3 @@ def create_app(test_config = None):
 
         return "", 204
     return app
-
-    app= create_app()

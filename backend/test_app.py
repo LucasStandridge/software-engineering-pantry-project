@@ -1,14 +1,15 @@
 import unittest
 
-import app as app_module
-from GroceryList import GroceryList
+from backend.app import create_app
 
 class APITestCase(unittest.TestCase):
 
     def setUp(self):
-        app_module.g_list = GroceryList()
-        app_module.app.config.update(TESTING = True)
-        self.client = app_module.app.test_client()
+        self.app = create_app({
+            "TESTING": True,
+            "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
+        })
+        self.client = self.app.test_client()
 
     def post_item(self, name):
         return self.client.post("/api/items", json={"name": name})
