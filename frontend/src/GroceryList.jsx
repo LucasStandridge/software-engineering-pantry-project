@@ -39,10 +39,6 @@ export default function GroceryList() {
         }
     };
 
-    const handleClick = () => {
-        alert("Button was clicked")
-    };
-
     const updateListItemQuantity = async (item_id, method) => {
         setError("");
 
@@ -81,6 +77,26 @@ export default function GroceryList() {
         }
     };
 
+    const toggleItemChecked = async (item_id) => {
+        setError("")
+
+        try{
+            const response = await fetch(`/api/items/${item_id}/toggle-checked`,{
+                method: "POST"
+            });
+            
+            if (!response.ok){
+                const body = await response.json().catch(() => ({}));
+                setError(body.error || "Something went wrong")
+                return;
+            }
+            setItems(await fetchItems())
+        }catch(err){
+            setError("Could not reach server")
+        }
+
+    }
+
     useEffect(() => {
         fetchItems()
             .then(setItems)
@@ -106,10 +122,10 @@ export default function GroceryList() {
             <ul>
                 {items.map((item) => ( 
                     <li key={item.id}>{item.name} x {item.quantity}
-                    {/* <button onClick = {handleClick}></button> */}
                         <button onClick = {() => updateListItemQuantity(item.id, "increment")}>+</button>
                         <button onClick = {() => updateListItemQuantity(item.id, "decrement")}>-</button>
                         <button onClick = {() => removeListItem(item.id)}>Del</button>
+                        <input type = "checkbox" onClick = { () => toggleItemChecked(item.id)}></input>
                     </li>
                 ))}
             </ul>

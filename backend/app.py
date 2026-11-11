@@ -72,6 +72,14 @@ def increment_item_route(item_id):
         return jsonify(error="Item not found"), 404
     return (jsonify(quantity = new_quantity), 200)
 
+@app.post("/api/items/<item_id>/toggle-checked")
+def toggle_item_checked_route(item_id):
+    try:
+        new_status = g_list.toggle_item(item_id)
+    except KeyError:
+        return jsonify(error = "Item not found"), 404
+    return (jsonify(checked_off = new_status), 200)
+
 @app.delete("/api/items/<item_id>/delete")
 def remove_item_route(item_id):
     try:
