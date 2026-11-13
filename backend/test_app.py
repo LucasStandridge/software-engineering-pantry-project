@@ -102,6 +102,30 @@ class TestRemoveRoute(APITestCase):
         self.assertEqual(response.status_code, 204)
         self.assertEqual(self.current_items(), [])
 
+    def test_remove_unknown_id_returns_405(self):
+        response = self.client.delete(f"/api/items/{1}/delete")
+        self.assertEqual(response.status_code, 404)
+        self.assertIn("error", response.json)
+
+class TestToggleCheckedRoute(APITestCase):
+
+    def test_toggle_on_false_turns_true(self):
+        item_id = self.add_and_get_id("milk")
+        response = self.client.post(f"/api/items/{item_id}/toggle-checked")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json(), {"checked_off": True})
+
+    def test_toggling_twice_returns_to_false(self):
+        item_id = self.add_and_get_id("milk")
+        self.client.post(f"/api/items/{item_id}/toggle-checked")
+        response = self.client.post(f"/api/items/{item_id}/toggle-checked")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json(), {"checked_off": False})
+
+    def test_toggle_unknown_id_returns_404(self):
+        response = self.client.post(f"/api/items/{1}/toggle-checked")
+        self.assertEqual(response.status_code, 404)
+        self.assertIn("error", response.json)
 
 if __name__ == "__main__":
     unittest.main()
