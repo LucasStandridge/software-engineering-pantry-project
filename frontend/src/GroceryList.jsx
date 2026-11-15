@@ -84,7 +84,6 @@ export default function GroceryList() {
             const response = await fetch(`/api/items/${item_id}/toggle-checked`,{
                 method: "POST"
             });
-            
             if (!response.ok){
                 const body = await response.json().catch(() => ({}));
                 setError(body.error || "Something went wrong")
@@ -94,7 +93,7 @@ export default function GroceryList() {
         }catch(err){
             setError("Could not reach server")
         }
-
+    
     }
 
     useEffect(() => {
@@ -125,7 +124,10 @@ export default function GroceryList() {
                         <button onClick = {() => updateListItemQuantity(item.id, "increment")}>+</button>
                         <button onClick = {() => updateListItemQuantity(item.id, "decrement")}>-</button>
                         <button onClick = {() => removeListItem(item.id)}>Del</button>
-                        <input type = "checkbox" onClick = { () => toggleItemChecked(item.id)}></input>
+                        <input type = "checkbox" 
+                            onChange = { () => toggleItemChecked(item.id)}
+                            checked = {item.checked_off}>
+                        </input>
                     </li>
                 ))}
             </ul>
