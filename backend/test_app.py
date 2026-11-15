@@ -101,7 +101,7 @@ class TestRemoveRoute(APITestCase):
         self.assertEqual(response.status_code, 204)
         self.assertEqual(self.current_items(), [])
 
-    def test_remove_unknown_id_returns_405(self):
+    def test_remove_unknown_id_returns_404(self):
         response = self.client.delete(f"/api/items/{1}/delete")
         self.assertEqual(response.status_code, 404)
         self.assertIn("error", response.json)
