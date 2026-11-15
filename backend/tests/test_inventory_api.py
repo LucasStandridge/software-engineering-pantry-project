@@ -336,3 +336,37 @@ def test_update_inventory_item_invalid_payload(client, invalid_payload):
         assert saved_item.name == "Milk"
         assert saved_item.quantity == Decimal("2.00")
         assert saved_item.storage_location == "refrigerator"
+
+def test_delete_inventory_item(client):
+    """Verify DELETE permanently removes an inventory item."""
+    with client.application.app_context():
+        item = InventoryItem(
+            name="Milk",
+            quantity=Decimal("2.00"),
+            unit="liters",
+            storage_location="refrigerator",
+        )
+
+        db.session.add(item)
+        db.session.commit()
+        item_id = item.item_id
+
+    response = client.delete(f"/api/inventory/{item_id}")
+
+    assert response.status_code == 204
+    assert response.data == b""
+
+    # Verify the record was actually deleted.
+    with client.application.app_context():
+        db.session.remove()
+        deleted_item = db.session.get(InventoryItem, item_id)
+
+        assert deleted_item is None
+
+
+def test_delete_inventory_item_not_found(client):
+    """Verify DELETE returns 404 for a nonexistent item."""
+    response = client.delete("/api/inventory/999999")
+
+    assert response.status_code == 404
+    assert response.get_json()["error"]["code"] == "not_found"

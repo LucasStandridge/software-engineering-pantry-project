@@ -185,6 +185,26 @@ def update_inventory_item(item_id):
 
     return jsonify(item=serialize_inventory_item(item)), 200
 
+@inventory_bp.delete("/<int:item_id>")
+def delete_inventory_item(item_id):
+    """Permanently remove an inventory item from the database."""
+    item = db.session.get(InventoryItem, item_id)
+
+    if item is None:
+        return jsonify(error={
+            "code": "not_found",
+            "message": "Inventory item not found",
+        }), 404
+
+    try:
+        db.session.delete(item)
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        raise
+
+    return "", 204
+
 def serialize_inventory_item(item):
     """Convert an InventoryItem model into a JSON-compatible dictionary."""
     return {
