@@ -93,3 +93,117 @@ def test_get_inventory_item_not_found(client):
             "message": "Inventory item not found",
         }
     }
+
+def test_create_inventory_item(client):
+    """Verify POST creates an inventory record in the database."""
+    payload = {
+        "name": "Milk",
+        "quantity": 2.0,
+        "unit": "liters",
+        "storage_location": "refrigerator",
+        "expiration_date": "2026-12-01",
+    }
+
+    response = client.post("/api/inventory", json=payload)
+
+    assert response.status_code == 201
+
+    data = response.get_json()
+    assert data["item"]["name"] == "Milk"
+    assert data["item"]["quantity"] == 2.0
+    assert data["item"]["expiration_date"] == "2026-12-01"
+
+    item_id = data["item"]["item_id"]
+
+    # Verify the record was actually persisted.
+    with client.application.app_context():
+        saved_item = db.session.get(InventoryItem, item_id)
+
+        assert saved_item is not None
+        assert saved_item.name == "Milk"
+        assert saved_item.quantity == Decimal("2.00")
+
+@pytest.mark.parametrize(
+    "invalid_payload",
+    [
+        {},  # Missing all required fields
+        {"name": "Milk"},  # Missing quantity, unit, and location
+        {
+            "name": "",
+            "quantity": 2,
+            "unit": "liters",
+            "storage_location": "refrigerator",
+        },
+        {
+            "name": "Milk",
+            "quantity": 0,
+            "unit": "liters",
+            "storage_location": "refrigerator",
+        },
+        {
+            "name": "Milk",
+            "quantity": -1,
+            "unit": "liters",
+            "storage_location": "refrigerator",
+        },
+        {
+            "name": "Milk",
+            "quantity": "invalid",
+            "unit": "liters",
+            "storage_location": "refrigerator",
+        },
+        {
+            "name": "Milk",
+            "quantity": 2,
+            "unit": "liters",
+            "storage_location": "refrigerator",
+            "expiration_date": "not-a-date",
+        },
+    ],
+)
+def test_create_inventory_item_invalid_payload(client, invalid_payload):
+    """Verify invalid inventory data is rejected."""
+    response = client.post("/api/inventory", json=invalid_payload)
+
+    assert response.status_code == 400
+
+    data = response.get_json()
+    assert "error" in data
+    assert data["error"]["code"] == "bad_request"
+
+    # Invalid requests must not create database records.
+    with client.application.app_context():
+        assert db.session.query(InventoryItem).count() == 0
+
+@pytest.mark.parametrize(
+    "field, invalid_value",
+    [
+        ("name", "A" * 101),
+        ("unit", "A" * 21),
+        ("storage_location", "A" * 51),
+        ("quantity", 1.234),
+        ("quantity", 100000000),
+        ("quantity", True),
+        ("quantity", None),
+        ("expiration_date", "2026-02-30"),
+        ("expiration_date", "20261201"),
+    ],
+)
+def test_create_inventory_item_invalid_boundaries(client, field, invalid_value):
+    """Verify inventory fields respect model constraints."""
+    payload = {
+        "name": "Milk",
+        "quantity": 2,
+        "unit": "liters",
+        "storage_location": "refrigerator",
+    }
+
+    payload[field] = invalid_value
+
+    response = client.post("/api/inventory", json=payload)
+
+    assert response.status_code == 400
+    assert response.get_json()["error"]["code"] == "bad_request"
+
+    with client.application.app_context():
+        assert db.session.query(InventoryItem).count() == 0
