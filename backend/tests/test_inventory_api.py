@@ -1,7 +1,7 @@
 """Tests for inventory REST API endpoints."""
 
 from decimal import Decimal
-
+from datetime import date
 import pytest
 
 from backend.app import create_app
@@ -207,3 +207,132 @@ def test_create_inventory_item_invalid_boundaries(client, field, invalid_value):
 
     with client.application.app_context():
         assert db.session.query(InventoryItem).count() == 0
+
+def test_update_inventory_item(client):
+    """Verify PATCH updates only the requested fields."""
+    with client.application.app_context():
+        item = InventoryItem(
+            name="Milk",
+            quantity=Decimal("2.00"),
+            unit="liters",
+            storage_location="refrigerator",
+        )
+
+        db.session.add(item)
+        db.session.commit()
+        item_id = item.item_id
+
+    response = client.patch(
+        f"/api/inventory/{item_id}",
+        json={
+            "quantity": 1.5,
+            "storage_location": "freezer",
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.get_json()["item"]
+
+    assert data["item_id"] == item_id
+    assert data["name"] == "Milk"
+    assert data["quantity"] == 1.5
+    assert data["unit"] == "liters"
+    assert data["storage_location"] == "freezer"
+
+    # Verify changes persisted to the database.
+    with client.application.app_context():
+        db.session.remove()
+        updated_item = db.session.get(InventoryItem, item_id)
+
+        assert updated_item.quantity == Decimal("1.50")
+        assert updated_item.storage_location == "freezer"
+        assert updated_item.name == "Milk"
+
+def test_update_inventory_item_clear_expiration(client):
+    """Verify PATCH can clear an existing expiration date."""
+    with client.application.app_context():
+        item = InventoryItem(
+            name="Milk",
+            quantity=Decimal("2.00"),
+            unit="liters",
+            storage_location="refrigerator",
+            expiration_date=date(2026, 12, 1),
+        )
+
+        db.session.add(item)
+        db.session.commit()
+        item_id = item.item_id
+
+    response = client.patch(
+        f"/api/inventory/{item_id}",
+        json={"expiration_date": None},
+    )
+
+    assert response.status_code == 200
+    assert response.get_json()["item"]["expiration_date"] is None
+
+    # Verify the change persists in the database.
+    with client.application.app_context():
+        db.session.remove()
+        saved_item = db.session.get(InventoryItem, item_id)
+
+        assert saved_item is not None
+        assert saved_item.expiration_date is None
+
+def test_update_inventory_item_not_found(client):
+    """Verify PATCH returns 404 for a nonexistent item."""
+    response = client.patch(
+        "/api/inventory/999999",
+        json={"quantity": 2},
+    )
+
+    assert response.status_code == 404
+    assert response.get_json()["error"]["code"] == "not_found"
+
+@pytest.mark.parametrize(
+    "invalid_payload",
+    [
+        {},
+        {"quantity": 0},
+        {"quantity": -1},
+        {"quantity": 1.234},
+        {"quantity": True},
+        {"name": ""},
+        {"storage_location": "A" * 51},
+        {"expiration_date": "invalid-date"},
+        {"item_id": 999},
+        {"created_at": "2026-01-01"},
+    ],
+)
+def test_update_inventory_item_invalid_payload(client, invalid_payload):
+    """Verify invalid PATCH requests do not modify inventory records."""
+    with client.application.app_context():
+        item = InventoryItem(
+            name="Milk",
+            quantity=Decimal("2.00"),
+            unit="liters",
+            storage_location="refrigerator",
+        )
+
+        db.session.add(item)
+        db.session.commit()
+        item_id = item.item_id
+
+    response = client.patch(
+        f"/api/inventory/{item_id}",
+        json=invalid_payload,
+    )
+
+    assert response.status_code == 400
+    assert response.get_json()["error"]["code"] == "bad_request"
+
+    # Confirm the original record remains unchanged.
+    with client.application.app_context():
+        db.session.remove()
+        saved_item = db.session.get(InventoryItem, item_id)
+
+        assert saved_item is not None
+        assert saved_item.name == "Milk"
+        assert saved_item.quantity == Decimal("2.00")
+        assert saved_item.storage_location == "refrigerator"
