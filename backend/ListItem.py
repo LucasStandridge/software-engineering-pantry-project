@@ -7,6 +7,7 @@ because an item cannot see its siblings or remove itself from its container.
 """
 import datetime
 import uuid
+from copy import deepcopy
 
 
 class ListItem():
@@ -89,5 +90,6 @@ class ListItem():
             "name": self.name,
             "quantity": self.quantity,
             "checked_off": self.checked_off,
-            "id": self.id
+            "id": self.id,
+            "data": deepcopy(self.data),
         }
