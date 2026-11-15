@@ -4,6 +4,7 @@ from backend.config import Config
 from backend.extensions import db, migrate
 from backend.GroceryList import GroceryList
 from backend.errors import register_error_handlers
+from backend.routes.food_search import food_search_bp
 
 def create_app(test_config = None):
     """Create and configure the application."""
@@ -13,15 +14,17 @@ def create_app(test_config = None):
     if test_config is not None:
         app.config.update(test_config)
 
-# Initialize database and migration support
+    # Initialize database and migration support
     db.init_app(app)
     migrate.init_app(app, db)
 
-# Register the db models for SQLAlchemy and migrations
+    # Register the db models for SQLAlchemy and migrations
     from backend import models
 
- # Register existing error handlers
+    # Register existing error handlers
     register_error_handlers(app)
+
+    app.register_blueprint(food_search_bp)
 
 
     # Existing grocery-list implementation
