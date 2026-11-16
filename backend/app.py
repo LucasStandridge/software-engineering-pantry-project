@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request
+from dotenv import load_dotenv
 
 from backend.config import Config
 from backend.extensions import db, migrate
@@ -8,6 +9,7 @@ from backend.routes.food_search import food_search_bp
 
 def create_app(test_config = None):
     """Create and configure the application."""
+    load_dotenv()
     app = Flask(__name__)
     app.config.from_object(Config)
 
