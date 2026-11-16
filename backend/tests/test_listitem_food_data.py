@@ -70,3 +70,45 @@ def test_grocerylist_accepts_structured_usda_food_data():
 
     assert item["data"] == food_data
     assert item["data"]["fdc_id"] == 123456
+
+def test_create_item_api_stores_usda_food_data():
+    """Verify POST /api/items stores the supplied USDA food data."""
+    from backend.app import create_app
+
+    app = create_app({"TESTING": True})
+    client = app.test_client()
+
+    food_data = {
+        "fdc_id": 123456,
+        "canonical_name": "Whole Milk",
+        "brand": None,
+        "nutrition": {
+            "calories": 61,
+            "protein": 3.2,
+        },
+    }
+
+    response = client.post(
+        "/api/items",
+        json={"name": "Milk", "data": food_data},
+    )
+
+    assert response.status_code == 201
+    assert response.get_json()["item"]["data"] == food_data
+
+def test_create_item_api_rejects_invalid_usda_data():
+    """Reject malformed USDA food data without creating an item."""
+    from backend.app import create_app
+
+    app = create_app({"TESTING": True})
+    client = app.test_client()
+
+    response = client.post(
+        "/api/items",
+        json={
+            "name": "Milk",
+            "data": {"canonical_name": "Whole Milk"},
+        },
+    )
+
+    assert response.status_code == 400

@@ -64,8 +64,17 @@ def create_app(test_config = None):
             ), 400
 
         try:
-            #TODO: Add actual data instead of the name (expiration time, food group, etc)
-            created, item_id = g_list.add_item(name, name)
+            # Use selected USDA food data when provided
+            # Preserve existing behavior for manual grocery entries
+            food_data = body.get("data", name)
+
+            if isinstance(food_data, dict):
+                fdc_id = food_data.get("fdc_id")
+
+                if type(fdc_id) is not int or fdc_id <= 0:
+                    raise ValueError("USDA food data must contain a valid fdc_id")
+
+            created, item_id = g_list.add_item(name, food_data)
         except ValueError as err:
             return jsonify(error=str(err)), 400
         return (
