@@ -1,6 +1,6 @@
 import unittest
 
-from GroceryList import GroceryList
+from backend.GroceryList import GroceryList
 
 DATA = "2%, dairy"  #placeholder until real food data exists
 
@@ -164,7 +164,7 @@ class TestRemoveToggleAndRead(GroceryListTestCase):
     def test_read_item_by_id_returns_expected_fields(self):
         _, item_id = self.add("milk")
         entry = self.g_list.read_item_by_id(item_id)
-        self.assertEqual(set(entry), {"id", "name", "quantity", "checked_off"})
+        self.assertEqual(set(entry), {"id", "name", "quantity", "checked_off", "data"})
         self.assertEqual(entry["id"], item_id)
 
     def test_returned_data_is_a_copy(self):
@@ -186,7 +186,6 @@ class TestListIdentity(GroceryListTestCase):
         other = GroceryList()
         self.add("milk")
         self.assertEqual(other.read_all_items(), [])
-
 
 if __name__ == "__main__":
     unittest.main()

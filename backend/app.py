@@ -1,27 +1,32 @@
 from flask import Flask, jsonify, request
+from dotenv import load_dotenv
 
 from backend.config import Config
 from backend.extensions import db, migrate
 from backend.GroceryList import GroceryList
 from backend.errors import register_error_handlers
+from backend.routes.food_search import food_search_bp
 
 def create_app(test_config = None):
     """Create and configure the application."""
+    load_dotenv()
     app = Flask(__name__)
     app.config.from_object(Config)
 
     if test_config is not None:
         app.config.update(test_config)
 
-# Initialize database and migration support
+    # Initialize database and migration support
     db.init_app(app)
     migrate.init_app(app, db)
 
-# Register the db models for SQLAlchemy and migrations
+    # Register the db models for SQLAlchemy and migrations
     from backend import models
 
- # Register existing error handlers
+    # Register existing error handlers
     register_error_handlers(app)
+
+    app.register_blueprint(food_search_bp)
 
 
     # Existing grocery-list implementation
@@ -61,8 +66,17 @@ def create_app(test_config = None):
             ), 400
 
         try:
-            #TODO: Add actual data instead of the name (expiration time, food group, etc)
-            created, item_id = g_list.add_item(name, name)
+            # Use selected USDA food data when provided
+            # Preserve existing behavior for manual grocery entries
+            food_data = body.get("data", name)
+
+            if isinstance(food_data, dict):
+                fdc_id = food_data.get("fdc_id")
+
+                if type(fdc_id) is not int or fdc_id <= 0:
+                    raise ValueError("USDA food data must contain a valid fdc_id")
+
+            created, item_id = g_list.add_item(name, food_data)
         except ValueError as err:
             return jsonify(error=str(err)), 400
         return (
