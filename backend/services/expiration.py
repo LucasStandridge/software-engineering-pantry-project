@@ -37,3 +37,25 @@ def classify_expiration(
         return "expiring_soon"
 
     return "fresh"
+
+def summarize_expiration(items, today=None, warning_days=3):
+    """Summarize inventory items by expiration status."""
+    counts = {
+        "expired": 0,
+        "expiring_soon": 0,
+        "fresh": 0,
+        "unknown": 0,
+    }
+
+    for item in items:
+        status = classify_expiration(
+            item["expiration_date"],
+            today=today,
+            warning_days=warning_days,
+        )
+        counts[status] += 1
+
+    return {
+        "total": len(items),
+        "counts": counts,
+    }

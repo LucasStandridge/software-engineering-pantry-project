@@ -4,7 +4,10 @@ from datetime import date, timedelta
 
 import pytest
 
-from backend.services.expiration import classify_expiration
+from backend.services.expiration import (
+    classify_expiration,
+    summarize_expiration,
+)
 
 
 @pytest.mark.parametrize(
@@ -52,3 +55,24 @@ def test_invalid_expiration_date():
     """Verify non-date expiration values are rejected."""
     with pytest.raises(TypeError):
         classify_expiration("2026-11-20", date(2026, 11, 15))
+
+def test_expiration_summary_counts():
+    """Verify inventory items are grouped by expiration status."""
+    today = date(2026, 11, 19)
+
+    items = [
+        {"expiration_date": date(2026, 11, 18)},
+        {"expiration_date": date(2026, 11, 20)},
+        {"expiration_date": date(2026, 11, 30)},
+        {"expiration_date": None},
+    ]
+
+    result = summarize_expiration(items, today=today)
+
+    assert result["total"] == 4
+    assert result["counts"] == {
+        "expired": 1,
+        "expiring_soon": 1,
+        "fresh": 1,
+        "unknown": 1,
+    }
