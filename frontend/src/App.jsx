@@ -5,6 +5,7 @@ import Pantry from './Pantry.jsx';
 import Recipes from './Recipes.jsx';
 import Home from './Home.jsx';
 import GroceryList from './GroceryList.jsx'
+import Login from './pages/login.jsx';
 
 function App() {
 
@@ -19,10 +20,11 @@ function App() {
         </nav>
 
         <Routes>
-          <Route path='/' element={<Home/>}></Route>
+          <Route path="/" element={<Home />} />
           <Route path='/pantry' element={<Pantry/>}></Route>
           <Route path='/recipes' element={<Recipes/>}></Route>
           <Route path='/grocerylist' element={<GroceryList/>}></Route>
+          <Route path="/login" element={<Login />} />
         </Routes>
       </BrowserRouter> 
     </>

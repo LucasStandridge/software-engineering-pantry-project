@@ -1,0 +1,211 @@
+
+/* Main background */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  padding: 40px 24px;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, #f8f9ed, #d9eddb);
+  font-family: Arial, sans-serif;
+}
+
+/* Two-column layout */
+.login-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 70px;
+  width: 100%;
+  max-width: 1100px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Left illustration */
+.login-illustration {
+  text-align: center;
+  animation: slideIn 1s ease both;
+}
+
+.illustration-circle {
+  width: 290px;
+  height: 290px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: #c6e5bc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.grocery-bag {
+  font-size: 145px;
+  animation: float 4s ease-in-out infinite;
+}
+
+.login-illustration h2 {
+  color: #214e32;
+  font-size: 30px;
+  margin-top: 30px;
+}
+
+.login-illustration p {
+  color: #657a6a;
+  line-height: 1.6;
+}
+
+/* Right login section */
+.login-content {
+  text-align: center;
+  animation: fadeUp 0.9s ease both;
+}
+
+.brand-icon {
+  font-size: 52px;
+  animation: float 3.5s ease-in-out infinite;
+}
+
+.login-content h1 {
+  color: #174a2d;
+  font-size: 42px;
+  margin: 10px 0;
+}
+
+.tagline {
+  color: #64806b;
+  margin-bottom: 35px;
+}
+
+/* Login card */
+.login-card {
+  background: rgba(255, 255, 255, 0.94);
+  padding: 42px 32px;
+  border-radius: 24px;
+  box-shadow: 0 18px 50px rgba(36, 75, 45, 0.12);
+}
+
+.login-card h2 {
+  color: #214e32;
+  font-size: 27px;
+}
+
+.login-card p {
+  color: #65746a;
+  line-height: 1.6;
+  margin-bottom: 28px;
+}
+
+/* Google login button */
+.google-button {
+  width: 100%;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid #d6dfd6;
+  background: white;
+  color: #234b32;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.google-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.09);
+}
+
+/* Floating vegetables */
+.floating-food {
+  position: absolute;
+  font-size: 55px;
+  pointer-events: none;
+  animation: float 5s ease-in-out infinite;
+}
+
+.food-one {
+  top: 12%;
+  left: 8%;
+}
+
+.food-two {
+  top: 18%;
+  right: 8%;
+  animation-delay: 1s;
+}
+
+.food-three {
+  bottom: 12%;
+  left: 12%;
+  animation-delay: 2s;
+}
+
+.food-four {
+  bottom: 15%;
+  right: 7%;
+  animation-delay: 1.5s;
+}
+
+/* Animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) rotate(-4deg);
+  }
+
+  50% {
+    transform: translateY(-20px) rotate(4deg);
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(25px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Mobile layout */
+@media (max-width: 750px) {
+  .login-layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .login-illustration {
+    display: none;
+  }
+
+  .login-content h1 {
+    font-size: 34px;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .login-page *,
+  .login-page *::before,
+  .login-page *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
