@@ -6,6 +6,7 @@ from backend.extensions import db, migrate
 from backend.GroceryList import GroceryList
 from backend.errors import register_error_handlers
 from backend.routes.food_search import food_search_bp
+from backend.routes.inventory import inventory_bp
 
 def create_app(test_config = None):
     """Create and configure the application."""
@@ -27,7 +28,7 @@ def create_app(test_config = None):
     register_error_handlers(app)
 
     app.register_blueprint(food_search_bp)
-
+    app.register_blueprint(inventory_bp)
 
     # Existing grocery-list implementation
     # Currently stored in memory, not PostgreSQL

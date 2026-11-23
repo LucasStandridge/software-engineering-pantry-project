@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import requests
 
-from foodData import parse_food_data, summarize_food, get_food_id, API_KEY, BASE
+from backend.foodData import parse_food_data, summarize_food, get_food_id, API_KEY, BASE
 
 
 class TestParseFoodData(unittest.TestCase):
@@ -117,14 +117,14 @@ class TestSummarizeFood(unittest.TestCase):
             }
         }
 
-    @patch("foodData.requests.get")
+    @patch("backend.foodData.requests.get")
     def test_summarize_food_outputs_correct_summary(self, mock_get):
         # Mock the API response so no real request is made
         mock_get.return_value.json.return_value = self.food_item
 
         self.assertEqual(summarize_food(2054688), self.expected_summary)
 
-    @patch("foodData.requests.get")
+    @patch("backend.foodData.requests.get")
     def test_summarize_food_calls_api_with_correct_url_and_key(self, mock_get):
         mock_get.return_value.json.return_value = self.food_item
 
@@ -132,7 +132,7 @@ class TestSummarizeFood(unittest.TestCase):
 
         mock_get.assert_called_once_with(f"{BASE}/food/2054688", params={"api_key": API_KEY})
 
-    @patch("foodData.requests.get")
+    @patch("backend.foodData.requests.get")
     def test_summarize_food_returns_none_on_network_error(self, mock_get):
         # Simulate the request failing (no internet, timeout, etc.)
         mock_get.side_effect = requests.ConnectionError("Network down")
@@ -142,7 +142,7 @@ class TestSummarizeFood(unittest.TestCase):
 
 class TestGetFoodId(unittest.TestCase):
 
-    @patch("foodData.requests.get")
+    @patch("backend.foodData.requests.get")
     def test_get_food_id_returns_first_result_id(self, mock_get):
         # Search returns multiple results, only the first should be used
         mock_get.return_value.json.return_value = {
@@ -154,7 +154,7 @@ class TestGetFoodId(unittest.TestCase):
 
         self.assertEqual(get_food_id("american cheese"), 2054688)
 
-    @patch("foodData.requests.get")
+    @patch("backend.foodData.requests.get")
     def test_get_food_id_calls_api_with_correct_url_and_params(self, mock_get):
         mock_get.return_value.json.return_value = {"foods": [{"fdcId": 2054688}]}
 
@@ -165,14 +165,14 @@ class TestGetFoodId(unittest.TestCase):
             params={"api_key": API_KEY, "query": "american cheese", "pageSize": 1}
         )
 
-    @patch("foodData.requests.get")
+    @patch("backend.foodData.requests.get")
     def test_get_food_id_returns_none_when_no_results(self, mock_get):
         # Search found nothing
         mock_get.return_value.json.return_value = {"foods": []}
 
         self.assertIsNone(get_food_id("not a real food"))
 
-    @patch("foodData.requests.get")
+    @patch("backend.foodData.requests.get")
     def test_get_food_id_returns_none_on_network_error(self, mock_get):
         mock_get.side_effect = requests.Timeout("Request timed out")
 

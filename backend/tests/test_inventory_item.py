@@ -12,7 +12,7 @@ def test_create_inventory_item(tmp_path):
 
     app = create_app({
         "TESTING": True,
-        "SQLALCEHEMY_DATABASE_URI": f"sqlite:///{test_db}"
+        "SQLALCHEMY_DATABASE_URI": f"sqlite:///{test_db}"
     })
 
     with app.app_context():
