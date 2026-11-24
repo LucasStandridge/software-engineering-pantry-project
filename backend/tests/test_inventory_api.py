@@ -1,3 +1,7 @@
+from uuid import UUID
+TEST_USER_ID = "00000000-0000-0000-0000-000000000001"
+TEST_CATEGORY = "Dairy"
+
 """Tests for inventory REST API endpoints."""
 
 from decimal import Decimal
@@ -42,6 +46,8 @@ def test_list_inventory_returns_saved_items(client):
             quantity=Decimal("2.00"),
             unit="liters",
             storage_location="refrigerator",
+            category="Dairy",
+            user_id=UUID("00000000-0000-0000-0000-000000000001")
         )
 
         db.session.add(item)
@@ -66,6 +72,8 @@ def test_get_inventory_item(client):
             quantity=Decimal("12.00"),
             unit="pieces",
             storage_location="refrigerator",
+            category="Dairy",
+            user_id=UUID("00000000-0000-0000-0000-000000000001")
         )
 
         db.session.add(item)
@@ -101,7 +109,10 @@ def test_create_inventory_item(client):
         "quantity": 2.0,
         "unit": "liters",
         "storage_location": "refrigerator",
+        "category": "Dairy",
         "expiration_date": "2026-12-01",
+        "user_id": "00000000-0000-0000-0000-000000000001",
+
     }
 
     response = client.post("/api/inventory", json=payload)
@@ -216,6 +227,8 @@ def test_update_inventory_item(client):
             quantity=Decimal("2.00"),
             unit="liters",
             storage_location="refrigerator",
+            category="Dairy",
+            user_id=UUID("00000000-0000-0000-0000-000000000001")
         )
 
         db.session.add(item)
@@ -258,6 +271,8 @@ def test_update_inventory_item_clear_expiration(client):
             unit="liters",
             storage_location="refrigerator",
             expiration_date=date(2026, 12, 1),
+            category="Dairy",
+            user_id=UUID("00000000-0000-0000-0000-000000000001")
         )
 
         db.session.add(item)
@@ -313,6 +328,8 @@ def test_update_inventory_item_invalid_payload(client, invalid_payload):
             quantity=Decimal("2.00"),
             unit="liters",
             storage_location="refrigerator",
+            category="Dairy",
+            user_id=UUID("00000000-0000-0000-0000-000000000001")
         )
 
         db.session.add(item)
@@ -345,6 +362,8 @@ def test_delete_inventory_item(client):
             quantity=Decimal("2.00"),
             unit="liters",
             storage_location="refrigerator",
+            category="Dairy",
+            user_id=UUID("00000000-0000-0000-0000-000000000001")
         )
 
         db.session.add(item)

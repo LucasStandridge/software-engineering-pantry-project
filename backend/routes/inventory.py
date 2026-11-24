@@ -1,3 +1,5 @@
+from uuid import UUID
+
 """Inventory API Endpoints."""
 
 from datetime import date
@@ -28,7 +30,7 @@ def validate_inventory_data(data, partial=False):
     if not isinstance(data, dict):
         return None, "Request body must be a JSON object"
 
-    required_fields = ("name", "quantity", "unit", "storage_location")
+    required_fields = ("name", "quantity", "unit", "storage_location", "category", "user_id")
     allowed_fields = set(required_fields) | {"expiration_date"}
 
     if not partial:
@@ -49,6 +51,7 @@ def validate_inventory_data(data, partial=False):
         "name": 100,
         "unit": 20,
         "storage_location": 50,
+        "category": 100,
     }
 
     for field, max_length in text_limits.items():
@@ -105,7 +108,11 @@ def validate_inventory_data(data, partial=False):
                 cleaned["expiration_date"] = date.fromisoformat(value)
             except ValueError:
                 return None, "Expiration date must use YYYY-MM-DD format"
-
+    if "user_id" in data:
+        try:
+            cleaned["user_id"] = UUID(str(data["user_id"]))
+        except (ValueError, TypeError, AttributeError):
+            return None, "Invalid user_id"
     return cleaned, None
 
 @inventory_bp.get("")
