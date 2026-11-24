@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import './Pantry.css';
+import { supabase } from './lib/supabase';
 
 const storage = [
   { name: 'Fridge', count: 12, icon: '🧊' },
@@ -13,12 +14,30 @@ export default function Pantry() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newItem, setNewItem] = useState('');
   const [quantity, setQuantity] = useState(1);
+  const [unit, setUnit] = useState('each');
+  const [storageLocation, setStorageLocation] = useState('Dry Pantry');
+  const [category, setCategory] = useState('Other');
+  const [userId, setUserId] = useState(null);
+  useEffect(() => {
+    async function loadUser() {
+      const { data: { user }, error } = await supabase.auth.getUser();
+
+      if (error) {
+        console.error('Unable to load user:', error.message);
+        return;
+      }
+
+      setUserId(user?.id ?? null);
+    }
+
+    loadUser();
+  }, []);
+
 
   useEffect(() => {
     async function loadGroceries() {
       try {
-        const response = await fetch('/api/items');
-
+        const response = await fetch('/api/inventory');
         if (!response.ok) {
           throw new Error('Failed to load inventory');
         }
@@ -56,14 +75,25 @@ export default function Pantry() {
           {showAddForm && (
 <form onSubmit={async (e) => {
   e.preventDefault();
+  if (!userId) {
+  setError('Please log in before adding items to your pantry.');
+  return;
+}
 
   try {
-    const response = await fetch('/api/items', {
+    const response = await fetch('/api/inventory', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ name: newItem.trim() })
+      body: JSON.stringify({
+        name: newItem.trim(),
+        quantity,
+        unit,
+        storage_location: storageLocation,
+        category,
+        user_id: userId
+      })
     });
 
     if (!response.ok) {
@@ -99,7 +129,65 @@ export default function Pantry() {
                 value={newItem}
                 onChange={(e) => setNewItem(e.target.value)}
               />
+<label>
+  Quantity
+  <input
+    type="number"
+    min="1"
+    step="1"
+    value={quantity}
+    onChange={(e) => setQuantity(Number(e.target.value))}
+    required
+  />
+</label>
 
+  <label>
+  Unit
+  <select
+    value={unit}
+    onChange={(e) => setUnit(e.target.value)}
+  >
+    <option value="each">Each</option>
+    <option value="lbs">Pounds (lbs)</option>
+    <option value="oz">Ounces (oz)</option>
+    <option value="g">Grams (g)</option>
+    <option value="kg">Kilograms (kg)</option>
+    <option value="cups">Cups</option>
+    <option value="bottles">Bottles</option>
+    <option value="cans">Cans</option>
+  </select>
+</label>
+
+  <label>
+  Storage Location
+  <select
+    value={storageLocation}
+    onChange={(e) => setStorageLocation(e.target.value)}
+  >
+    <option value="Fridge">Fridge</option>
+    <option value="Freezer">Freezer</option>
+    <option value="Dry Pantry">Dry Pantry</option>
+  </select>
+</label>
+
+  <label>
+  Category
+  <select
+    value={category}
+    onChange={(e) => setCategory(e.target.value)}
+  >
+    <option value="Other">Other</option>
+    <option value="Produce">Produce</option>
+    <option value="Dairy">Dairy</option>
+    <option value="Meat">Meat & Seafood</option>
+    <option value="Grains">Grains & Bread</option>
+    <option value="Frozen">Frozen Foods</option>
+    <option value="Canned">Canned Goods</option>
+    <option value="Beverages">Beverages</option>
+    <option value="Snacks">Snacks</option>
+    <option value="Condiments">Condiments</option>
+  </select>
+</label>
               <button type="submit">Save Item</button>
 
               <button
