@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api': process.env.FLASK_API_URL || 'http://localhost:5001'
+      '/api':'http://127.0.0.1:5050'
     }
   }
 })

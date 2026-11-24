@@ -9,12 +9,14 @@ class InventoryItem(db.Model):
         CheckConstraint("quantity > 0", name="ck_inventory_quantity_positive"),
     )
 
-    item_id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
+    item_id = db.Column("id", db.Integer, primary_key=True)
+    name = db.Column("item_name", db.String(100), nullable=False)
     quantity= db.Column(db.Numeric(10, 2), nullable= False)
     unit = db.Column(db.String(20), nullable=False)
     storage_location = db.Column(db.String(50), nullable=False)
     expiration_date = db.Column(db.Date, nullable=True)
+    category = db.Column(db.String, nullable=False)
+    user_id = db.Column(db.Uuid(as_uuid=True), nullable=False)
 
     created_at = db.Column(
         db.DateTime(timezone=True),

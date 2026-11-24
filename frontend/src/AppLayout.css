@@ -1,0 +1,146 @@
+
+/* Shared application layout */
+* {
+  box-sizing: border-box;
+}
+
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f6f8f5;
+  color: #24332b;
+  font-family: Inter, Arial, sans-serif;
+}
+
+/* Sidebar */
+.app-sidebar {
+  width: 250px;
+  min-width: 250px;
+  background: #ffffff;
+  border-right: 1px solid #e5ebe5;
+  padding: 28px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 35px;
+}
+
+.app-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.app-brand h2 {
+  font-size: 19px;
+  margin: 0;
+  color: #24744b;
+}
+
+.app-brand span {
+  font-size: 26px;
+}
+
+/* Navigation */
+.app-navigation {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.app-navigation a {
+  padding: 13px 15px;
+  border-radius: 10px;
+  color: #536258;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.app-navigation a:hover {
+  background: #f0f6f1;
+}
+
+.app-navigation a.active {
+  background: #e1f3e7;
+  color: #207347;
+  font-weight: 700;
+}
+
+/* Sidebar footer */
+.app-sidebar-footer {
+  margin-top: auto;
+  color: #8a958c;
+  font-size: 12px;
+}
+
+.app-sidebar-footer p {
+  margin-bottom: 4px;
+}
+
+/* Main content */
+.app-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.app-header {
+  background: #ffffff;
+  border-bottom: 1px solid #e5ebe5;
+  padding: 24px 36px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.app-header h1 {
+  font-size: 23px;
+  margin: 0 0 6px;
+}
+
+.app-header p {
+  color: #829086;
+  margin: 0;
+}
+
+.app-avatar {
+  background: #e1f3e7;
+  border-radius: 50%;
+  padding: 12px;
+}
+
+.app-content {
+  padding: 30px 36px;
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+/* Responsive layout */
+@media (max-width: 768px) {
+  .app-layout {
+    flex-direction: column;
+  }
+
+  .app-sidebar {
+    width: 100%;
+    min-width: 0;
+    padding: 16px;
+    gap: 15px;
+  }
+
+  .app-navigation {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .app-navigation a {
+    white-space: nowrap;
+  }
+
+  .app-header {
+    padding: 20px;
+  }
+
+  .app-content {
+    padding: 20px;
+  }
+}
