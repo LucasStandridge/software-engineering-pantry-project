@@ -50,9 +50,9 @@ def parse_food_data(food_item: dict) -> dict:
         - food_item: The API response as a dictionary."""
     
     summary: dict = {"canonical_name": None,                # Name in the database
-                     "food_category": None,                 # Alternative food description, more standardized but also sometimes vague
-                    "brand": None,                          # Specific brand the nutrition info was pulled from. 
-                    "nutrition": {                          # Nutrition info per 100g
+                     "food_category": None,                 # Alternative food description, more standardized but also sometimes vague. Closest thing to a food group (ex. 'Dairy', 'Chips and Snacks' )
+                     "brand": None,                          # Specific brand the nutrition info was pulled from. 
+                     "nutrition": {                          # Nutrition info per 100g
                             "calories": None,                   # Kcal
                             "protein": None,                    # g
                             "total_sugars": None,               # g
@@ -113,7 +113,6 @@ def get_food_id(food_query: str, brand_name: str = None) -> int:
         - food_query: The name of the food item to search for.
         - brand_name: Optional. The brand name to filter by. If provided, will return the first result with that brand name.
     """
-
     try:
         # If a brand name is given, use it for searching
         if brand_name:
@@ -121,7 +120,7 @@ def get_food_id(food_query: str, brand_name: str = None) -> int:
             # If there is a result from brand search, use it.
             if r["totalHits"] != 0:
                 food_id = r["foods"][0]["fdcId"]
-                return r["foods"][0]
+                return food_id
 
         # Otherwise, just grab the first item returned
         r: dict = requests.get(f"{BASE}/foods/search", params = {"api_key": API_KEY, "query": food_query, "pageSize": 1}).json()
@@ -132,9 +131,8 @@ def get_food_id(food_query: str, brand_name: str = None) -> int:
         return None
 
 
-
 if __name__ == "__main__":
-    query = "american cheese"
+    query = "potato chips"
     brand = None
     food_id = get_food_id(query, brand)
     summary = summarize_food(food_id)
