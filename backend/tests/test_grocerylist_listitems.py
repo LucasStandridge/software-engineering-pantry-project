@@ -1,6 +1,6 @@
 import unittest
 
-from GroceryList import GroceryList
+from backend.GroceryList import GroceryList
 
 DATA = "2%, dairy"  #placeholder until real food data exists
 
@@ -97,7 +97,20 @@ class TestDecrementItem(GroceryListTestCase):
         self.assertEqual(self.g_list.read_item_by_id(milk_id)["quantity"], 1)
         self.assertEqual(self.g_list.read_item_by_id(eggs_id)["quantity"], 1)
 
+class TestIncrementItem(GroceryListTestCase):
+    def test_increment_quantity_and_returns_it(self):
+        _, item_id = self.add("milk")
+        self.assertEqual(self.g_list.increment_item(item_id), 2)
+        self.assertEqual(self.g_list.read_item_by_id(item_id)["quantity"], 2)
 
+    def test_increment_affects_only_the_matching_item(self):
+        _, milk_id = self.add("milk")
+        _, eggs_id = self.add("eggs")
+       
+        self.assertEqual(self.g_list.increment_item(eggs_id), 2)
+        self.assertEqual(self.g_list.read_item_by_id(milk_id)["quantity"], 1)
+        self.assertEqual(self.g_list.read_item_by_id(eggs_id)["quantity"], 2)
+        
 class TestRemoveToggleAndRead(GroceryListTestCase):
 
     def test_remove_item_removes_only_that_item(self):
@@ -131,6 +144,7 @@ class TestRemoveToggleAndRead(GroceryListTestCase):
         self.add("milk")
         for method in (
             self.g_list.decrement_item,
+            self.g_list.increment_item,
             self.g_list.remove_item,
             self.g_list.toggle_item,
             self.g_list.read_item_by_id,
@@ -150,7 +164,7 @@ class TestRemoveToggleAndRead(GroceryListTestCase):
     def test_read_item_by_id_returns_expected_fields(self):
         _, item_id = self.add("milk")
         entry = self.g_list.read_item_by_id(item_id)
-        self.assertEqual(set(entry), {"id", "name", "quantity", "checked_off"})
+        self.assertEqual(set(entry), {"id", "name", "quantity", "checked_off", "data"})
         self.assertEqual(entry["id"], item_id)
 
     def test_returned_data_is_a_copy(self):
@@ -172,7 +186,6 @@ class TestListIdentity(GroceryListTestCase):
         other = GroceryList()
         self.add("milk")
         self.assertEqual(other.read_all_items(), [])
-
 
 if __name__ == "__main__":
     unittest.main()

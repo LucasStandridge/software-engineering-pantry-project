@@ -14,6 +14,9 @@ export default function GroceryList() {
     const [items, setItems] = useState([]); // what the list shows
     const [name, setName] = useState("");   // what is typed in the box
     const [error, setError] = useState(""); // message to show, if any
+    const [foodMatches, setFoodMatches] = useState([]);
+    const [selectedFood, setSelectedFood] = useState(null);
+
 
     // TODO: disable the button while a request is in flight. Two quick clicks
     // send two POSTs, and the second one bumps the quantity.
@@ -23,7 +26,16 @@ export default function GroceryList() {
             const response = await fetch("/api/items", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name }),
+                body: JSON.stringify({
+                    name,
+                    ...(selectedFood && {
+                        data: {
+                            fdc_id: selectedFood.fdc_id,
+                            canonical_name: selectedFood.description,
+                            brand: selectedFood.brand,
+                        },
+                    }),
+                }),
             });
 
             if (!response.ok) {
@@ -33,11 +45,96 @@ export default function GroceryList() {
             }
 
             setName("");
+            setSelectedFood(null);
+            setFoodMatches([]);
             setItems(await fetchItems());
         } catch (err) {
             setError("Could not reach the server");
         }
     };
+
+    const searchFoods = async () => {
+        setError("");
+        setFoodMatches([]);
+        setSelectedFood(null);
+
+        if (!name.trim()) {
+            return;
+        }
+
+        try {
+            const response = await fetch(
+                `/api/foods/search?q=${encodeURIComponent(name.trim())}`
+            );
+
+            if (!response.ok) {
+                setError("Could not search USDA food data");
+                return;
+            }
+
+            const data = await response.json();
+            setFoodMatches(data.foods);
+        } catch {
+            setError("Could not reach the food search service");
+        }
+    };
+
+    const updateListItemQuantity = async (item_id, method) => {
+        setError("");
+
+        try{
+            const response = await fetch(`/api/items/${item_id}/${method}`, {
+                method: "POST",
+            });
+            
+            if (!response.ok) {
+                const body = await response.json().catch(() => ({}));
+                setError(body.error || "Something went wrong");
+                return;
+            }
+            setItems(await fetchItems());
+        } catch (err) {
+            setError("Could not reach the server");
+        }
+    };
+
+    const removeListItem = async(item_id) => {
+        setError("");
+
+        try{
+            const response = await fetch(`/api/items/${item_id}/delete`,{
+                method: "DELETE"
+            });
+
+            if(!response.ok) {
+                const body = await response.json().catch(() => ({}));
+                setError(body.error || "Something went wrong");
+                return;
+            }
+            setItems(await fetchItems());
+        }catch (err){
+            setError("Could not reach the server");
+        }
+    };
+
+    const toggleItemChecked = async (item_id) => {
+        setError("")
+
+        try{
+            const response = await fetch(`/api/items/${item_id}/toggle-checked`,{
+                method: "POST"
+            });
+            if (!response.ok){
+                const body = await response.json().catch(() => ({}));
+                setError(body.error || "Something went wrong")
+                return;
+            }
+            setItems(await fetchItems())
+        }catch(err){
+            setError("Could not reach server")
+        }
+    
+    }
 
     useEffect(() => {
         fetchItems()
@@ -55,15 +152,51 @@ export default function GroceryList() {
                 name="food_name"
                 placeholder="Enter your food"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                    setName(e.target.value);
+                    setSelectedFood(null);
+                    setFoodMatches([]);
+                }}
             />
+            <button type="button" onClick={searchFoods}>
+                Search USDA
+            </button>
+
             <button name="submit_food" onClick={postFood}>Submit</button>
+
+            {foodMatches.length > 0 && (
+                <ul>
+                    {foodMatches.map((food) => (
+                        <li key={food.fdc_id}>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setSelectedFood(food);
+                                    setName(food.description);
+                                    setFoodMatches([]);
+                                }}
+                            >
+                                {food.description}
+                                {food.brand ? ` — ${food.brand}` : ""}
+                            </button>
+                        </li>
+                    ))}
+                </ul>
+            )}
 
             {error && <p>{error}</p>}
 
             <ul>
-                {items.map((item) => (
-                    <li key={item.id}>{item.name} x {item.quantity}</li>
+                {items.map((item) => ( 
+                    <li key={item.id}>{item.name} x {item.quantity}
+                        <button onClick = {() => updateListItemQuantity(item.id, "increment")}>+</button>
+                        <button onClick = {() => updateListItemQuantity(item.id, "decrement")}>-</button>
+                        <button onClick = {() => removeListItem(item.id)}>Del</button>
+                        <input type = "checkbox" 
+                            onChange = { () => toggleItemChecked(item.id)}
+                            checked = {item.checked_off}>
+                        </input>
+                    </li>
                 ))}
             </ul>
         </>

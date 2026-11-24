@@ -2,7 +2,7 @@
 Callers should route methods through GroceryList instead of touching items directly
 """
 
-from ListItem import ListItem
+from backend.ListItem import ListItem
 
 """Trim the ends and outside whitespace. Keeps capitalization
 Case insensitive comparison happens within find_duplicate_index
@@ -70,7 +70,18 @@ class GroceryList():
                     #Returns 0 instead of (now gone) item quantity
                     return 0
         raise KeyError("ID not found")
+
+    def increment_item(self, item_id):
+        """Raises an item's quantity by 1.
         
+        Returns the new quantity, or raises a KeyError if the ID is not found.
+        """
+        for item in self.items:
+            if item.id == item_id:
+                item.increment_quantity()
+                return item.quantity
+        raise KeyError("ID not found")
+    
     def remove_item(self, item_id):
         """Remove an item regardless of quantity. Returns None
         Raises KeyError if the item is not found."""
