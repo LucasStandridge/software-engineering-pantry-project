@@ -16,7 +16,7 @@ export default function GroceryList() {
     const [error, setError] = useState(""); // message to show, if any
     const [foodMatches, setFoodMatches] = useState([]);
     const [selectedFood, setSelectedFood] = useState(null);
-
+    const [location, setLocation] = useState("refrigerator")
 
     // TODO: disable the button while a request is in flight. Two quick clicks
     // send two POSTs, and the second one bumps the quantity.
@@ -136,6 +136,71 @@ export default function GroceryList() {
     
     }
 
+    const pushItemsToInventory = async () => {
+        setError("");
+        for (const item of items) {
+            if (!item.checked_off) continue;
+            const valid_item = transformItemsIntoInventoryUsable(item)
+            try {
+                const response = await fetch("/api/inventory", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(valid_item),
+                });
+                if (response.ok) {
+                    console.log("Posted:", item);
+                } else {
+                    const body = await response.json().catch(() => ({}));
+                    setError(body.error || "Something went wrong");
+                    return;
+                }
+            } catch (err) {
+                const body = await response.json().catch(() => ({}));
+                setError(body.error?.message || body.error || "Something went wrong");
+                return;
+            }
+        }
+    };
+
+    const transformItemsIntoInventoryUsable = (item) => {
+        // Potentially temporary function to make item data usable with 'validate_inventory_data (inventory.py)
+        //Could be replaced if item.data is correctly formatted from API. Otherwise could be done with this function
+        console.log(item.storage_location.location)
+        return{
+            "name" : item.data,
+            "quantity" : item.quantity,
+            "unit" : "temp",
+            "storage_location" : item.storage_location.location,
+            "category" : "dairy",
+            "user_id" : "550e8400-e29b-41d4-a716-446655440000",
+        }
+    }
+
+    const handleLocationChange = async (e, item_id) => {
+        const newLocation = e.target.value;
+        setItems(prev =>
+            prev.map(it =>
+                it.id === item_id
+                    ? { ...it, storage_location: { ...it.storage_location, location: newLocation } }
+                    : it
+            )
+        );
+        
+        try{
+            const response = await fetch(`/api/items/${item_id}/storage-location`,{
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({location: newLocation})
+            });
+
+            if (!response.ok){
+                const body = await response.json().catch(() => ({}));
+                setError(body.error?.message || "Could not update location");
+            }
+        }catch(err){
+            setError("Could not reach server")
+        }
+    }
     useEffect(() => {
         fetchItems()
             .then(setItems)
@@ -196,9 +261,19 @@ export default function GroceryList() {
                             onChange = { () => toggleItemChecked(item.id)}
                             checked = {item.checked_off}>
                         </input>
+                        <label htmlFor="storage-select">Storage Location:</label>
+                        <select id={`storage-select-${item.id}`}
+                        name="location"
+                        value={item.storage_location?.location ?? "Refrigerator"}
+                        onChange={(e) => handleLocationChange(e, item.id)}>
+                            <option value="refrigerator">Refrigerator</option>
+                            <option value="pantry">Pantry</option>
+                            <option value="freezer">Freezer</option>
+                        </select>
                     </li>
                 ))}
             </ul>
+            <button onClick = {() => pushItemsToInventory()}n>Complete List</button>
         </>
     );
 }

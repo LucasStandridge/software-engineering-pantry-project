@@ -109,6 +109,15 @@ def create_app(test_config = None):
             return jsonify(error = "Item not found"), 404
         return (jsonify(checked_off = new_status), 200)
 
+    @app.patch("/api/items/<item_id>/storage-location")
+    def update_item_storage_location(item_id):
+        body = request.get_json(silent=True)
+        try: 
+            new_location = g_list.update_item_storage_location(item_id, body)
+        except KeyError:
+            return jsonify(error = "Item not found"), 404
+        return (jsonify(storage_location = new_location), 200)
+    
     @app.delete("/api/items/<item_id>/delete")
     def remove_item_route(item_id):
         try:

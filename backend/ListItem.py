@@ -14,14 +14,15 @@ class ListItem():
     """One row on the grocery list.
 
     Fields:
-        name:            The cleaned text the user typed
-        data:            Dictionary containing food data. Should include canonical name, amount per-unit, nutrition info, and expiration date if provided
-        quantity:        How many of this entry the user wants. Always >= 1.
-                         NOTE: Does not distinguish size yet. 1 Gallon of milk
-                         is treated == to a Half Gallon for now
-        checked_off:     True once the user has marked the item as bought.
-        insertion_order: When the item was created.
-        id:              Unique string used to refer to this item from outside
+        name:             The cleaned text the user typed
+        data:             Dictionary containing food data. Should include canonical name, amount per-unit, nutrition info, and expiration date if provided
+        quantity:         How many of this entry the user wants. Always >= 1.
+                          NOTE: Does not distinguish size yet. 1 Gallon of milk
+                          is treated == to a Half Gallon for now
+        storage_location: Where the user plans to store this item
+        checked_off:      True once the user has marked the item as bought.
+        insertion_order:  When the item was created.
+        id:               Unique string used to refer to this item from outside
 
     Limitations / future changes:
         - Nothing distinguishes sizes yet. GroceryList merges by name, so
@@ -47,6 +48,7 @@ class ListItem():
         self.data = data
 
         self.quantity = 1
+        self.storage_location = "Refrigerator"
         self.checked_off = False
 
         # Local wall-clock time. Becomes useful once sorting is 
@@ -79,6 +81,10 @@ class ListItem():
         """Raise quantity by one."""
         self.quantity += 1
 
+    def update_storage_location(self, new_location):
+        """Updates the storage location"""
+        self.storage_location = new_location
+        
     def read_information(self):
         """Return a plain-dict snapshot of this item for display.
 
@@ -90,6 +96,7 @@ class ListItem():
             "name": self.name,
             "quantity": self.quantity,
             "checked_off": self.checked_off,
+            "storage_location": self.storage_location,
             "id": self.id,
             "data": deepcopy(self.data),
         }
