@@ -4,7 +4,7 @@ from unittest.mock import patch, call
 
 import requests
 
-from foodData import parse_food_data, summarize_food, get_food_id, API_KEY, BASE
+from backend.foodData import parse_food_data, summarize_food, get_food_id, API_KEY, BASE
 
 
 # ---------------------------------------------------------------------------
@@ -172,14 +172,14 @@ class TestParseFoodData(unittest.TestCase):
 # Pretty much just tests that the API is calling correctly, does not test logic of parsing results
 class TestSummarizeFood(unittest.TestCase):
 
-    @patch("foodData.requests.get")
+    @patch("backend.foodData.requests.get")
     def test_summarize_food_outputs_correct_summary(self, mock_get):
         # Mock the API response so no real request is made
         mock_get.return_value.json.return_value = deepcopy(SAMPLE_FOOD)
 
         self.assertEqual(summarize_food(SAMPLE_FDC_ID), EXPECTED_SUMMARY)
 
-    @patch("foodData.requests.get")
+    @patch("backend.foodData.requests.get")
     def test_summarize_food_calls_api_with_correct_url_and_key(self, mock_get):
         mock_get.return_value.json.return_value = deepcopy(SAMPLE_FOOD)
 
@@ -187,21 +187,21 @@ class TestSummarizeFood(unittest.TestCase):
 
         mock_get.assert_called_once_with(f"{BASE}/food/{SAMPLE_FDC_ID}", params={"api_key": API_KEY})
 
-    @patch("foodData.requests.get")
+    @patch("backend.foodData.requests.get")
     def test_summarize_food_returns_none_on_network_error(self, mock_get):
         # Simulate the request failing (no internet, timeout, etc.)
         mock_get.side_effect = requests.ConnectionError("Network down")
 
         self.assertIsNone(summarize_food(SAMPLE_FDC_ID))
 
-    @patch("foodData.requests.get")
+    @patch("backend.foodData.requests.get")
     def test_summarize_food_returns_none_on_error_response(self, mock_get):
         # The API returns an error body (no "description" or "foodNutrients") for a bad ID
         mock_get.return_value.json.return_value = {"error": "Not found"}
 
         self.assertIsNone(summarize_food(0))
 
-    @patch("foodData.requests.get")
+    @patch("backend.foodData.requests.get")
     def test_summarize_food_returns_none_on_invalid_json(self, mock_get):
         # Simulate a response body that can't be decoded (ex. an HTML error page)
         mock_get.return_value.json.side_effect = ValueError("No JSON object could be decoded")
@@ -212,14 +212,14 @@ class TestSummarizeFood(unittest.TestCase):
 class TestGetFoodId(unittest.TestCase):
 
     # Make sure it returns the first id it finds
-    @patch("foodData.requests.get")
+    @patch("backend.foodData.requests.get")
     def test_get_food_id_returns_first_result_id(self, mock_get):
         mock_get.return_value.json.return_value = deepcopy(SAMPLE_SEARCH_RESPONSE)
 
         self.assertEqual(get_food_id("american cheese"), SAMPLE_FDC_ID)
 
     # Make sure api is called correctly
-    @patch("foodData.requests.get")
+    @patch("backend.foodData.requests.get")
     def test_get_food_id_calls_api_with_correct_url_and_params(self, mock_get):
         mock_get.return_value.json.return_value = deepcopy(SAMPLE_SEARCH_RESPONSE)
 
@@ -231,7 +231,7 @@ class TestGetFoodId(unittest.TestCase):
         )
 
     # Make sure none is returned if there are no results
-    @patch("foodData.requests.get")
+    @patch("backend.foodData.requests.get")
     def test_get_food_id_returns_none_when_no_results(self, mock_get):
         search_response = deepcopy(SAMPLE_SEARCH_RESPONSE)
         search_response["totalHits"] = 0
@@ -241,21 +241,21 @@ class TestGetFoodId(unittest.TestCase):
         self.assertIsNone(get_food_id("not a real food"))
 
     # Make sure none is returned if a network error occurs
-    @patch("foodData.requests.get")
+    @patch("backend.foodData.requests.get")
     def test_get_food_id_returns_none_on_network_error(self, mock_get):
         mock_get.side_effect = requests.Timeout("Request timed out")
 
         self.assertIsNone(get_food_id("american cheese"))
 
     # Make sure that id is returned when including a brand
-    @patch("foodData.requests.get")
+    @patch("backend.foodData.requests.get")
     def test_get_food_id_returns_id_when_brand_search_has_hits(self, mock_get):
         mock_get.return_value.json.return_value = deepcopy(SAMPLE_SEARCH_RESPONSE)
 
         self.assertEqual(get_food_id("american cheese", "World Cheese Co. Inc."), SAMPLE_FDC_ID)
 
     # Make sure the general search is used when the brand search finds nothing
-    @patch("foodData.requests.get")
+    @patch("backend.foodData.requests.get")
     def test_get_food_id_falls_back_to_general_search_when_brand_has_no_hits(self, mock_get):
         # First call (brand search) finds nothing, second call (general search) finds results
         no_brand_hits = deepcopy(SAMPLE_SEARCH_RESPONSE)
@@ -277,7 +277,7 @@ class TestGetFoodId(unittest.TestCase):
         ])
 
     # Make sure none is returned if the response is missing the expected structure
-    @patch("foodData.requests.get")
+    @patch("backend.foodData.requests.get")
     def test_get_food_id_returns_none_when_response_missing_foods_key(self, mock_get):
         search_response = deepcopy(SAMPLE_SEARCH_RESPONSE)
         del search_response["foods"]
