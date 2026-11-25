@@ -9,6 +9,10 @@ from flask import Blueprint, jsonify, request
 
 from backend.extensions import db
 from backend.models import InventoryItem
+from backend.services.expiration import (
+    classify_expiration,
+    summarize_expiration,
+)
 
 import re
 
@@ -114,6 +118,32 @@ def validate_inventory_data(data, partial=False):
         except (ValueError, TypeError, AttributeError):
             return None, "Invalid user_id"
     return cleaned, None
+
+@inventory_bp.get("/expiration-summary")
+def get_expiration_summary():
+    """Summarize expiration statuses for stored inventory items."""
+    items = db.session.execute(
+        db.select(InventoryItem).order_by(InventoryItem.item_id)
+    ).scalars().all()
+
+    today = date.today()
+
+    summary = summarize_expiration(
+        [{"expiration_date": item.expiration_date} for item in items],
+        today=today,
+    )
+
+    summary["items"] = []
+
+    for item in items:
+        serialized = serialize_inventory_item(item)
+        serialized["expiration_status"] = classify_expiration(
+            item.expiration_date,
+            today=today,
+        )
+        summary["items"].append(serialized)
+
+    return jsonify(summary), 200
 
 @inventory_bp.get("")
 def list_inventory():
