@@ -35,23 +35,23 @@ Capabilities:
 Things to improve
     - In 'parse_food_data', nutrients are each grabbed using one ID, but the database has multiple IDs with equivalent nutrient categories.
         - Some database entries do not all use those specific ones, so add fallbacks to IDs for equivalent nutrient categories (ex. fallback to ID for 'total_carbs' if the ID for 'carbs' had None)
-    
+
     - 'get_food_id' search is kind of janky. Not enough specificity can return things that are close, but not correct (ex. searching 'hotdogs' will return info for hotdog bun, not actual hotdogs)
         - Currently no way to verify the food item is what the user wanted to add
-    
+
     - Unless other features could benefit from 'summarize_food' finding info for specific FDC IDs, 'get_food_id' could return the full food info instead of just the FDC ID
         - Reduces the number of API calls since 'summarize_food' no longer needs to make another call using the specific ID
-    
+
     - Error handling is very basic, just returns None to avoid crashes. Does not give meaningful information
 """
 
 def parse_food_data(food_item: dict) -> dict:
     """Parse the data returned from the USDA FoodData Central API.
         - food_item: The API response as a dictionary."""
-    
+
     summary: dict = {"canonical_name": None,                # Name in the database
                      "food_category": None,                 # Alternative food description, more standardized but also sometimes vague. Closest thing to a food group (ex. 'Dairy', 'Chips and Snacks' )
-                     "brand": None,                          # Specific brand the nutrition info was pulled from. 
+                     "brand": None,                          # Specific brand the nutrition info was pulled from.
                      "nutrition": {                          # Nutrition info per 100g
                             "calories": None,                   # Kcal
                             "protein": None,                    # g
@@ -60,41 +60,38 @@ def parse_food_data(food_item: dict) -> dict:
                             "fat": None                         # g
                     }}
     summary["canonical_name"] = food_item["description"]
-    summary["brand"] = food_item.get("brandOwner") 
+    summary["brand"] = food_item.get("brandOwner")
 
-    # Check for category from brand first, then check general food category
+    # Check for branded food category, then general food category.
     summary["food_category"] = food_item.get("brandedFoodCategory")
-    if summary["food_category"] == None:
+    if summary["food_category"] is None:
         summary["food_category"] = food_item.get("foodCategory", {}).get("description")
-    
 
-    # Loop through the full nutrient list to grab each value
+    # Nutrient codes ordered by priority.
+    nutrient_codes = {
+        "protein": ["203", "257"],
+        "fat": ["204", "298"],
+        "total_sugars": ["269", "269.3"],
+        "carbohydrates": ["205", "205.2", "956"],
+        "calories": ["208", "957", "958"],
+    }
+
+    amount_by_code = {}
+
     for nutrient in food_item["foodNutrients"]:
-        
-        # Specific nutrient IDs are used to grab the relevant nutrition info. See 'nutrient.csv' for the specific codes under 'nutrition_nbr'.
+        code = nutrient["nutrient"]["number"]
+        amount = nutrient.get("amount")
+        amount_by_code[code] = amount
 
-        # Protein (g)
-        if nutrient["nutrient"]["number"] == '203':                     
-            summary["nutrition"]["protein"] = nutrient["amount"]
+    for nutrient_name, possible_codes in nutrient_codes.items():
+        summary["nutrition"][nutrient_name] = None
 
-        # Fat (g)
-        elif nutrient["nutrient"]["number"] == '204':
-            summary["nutrition"]["fat"] = nutrient["amount"]
-
-        # Total Sugars (g)
-        elif nutrient["nutrient"]["number"] == '269':
-            summary["nutrition"]["total_sugars"] = nutrient["amount"]
-
-        # Carbohydrates (g)
-        elif nutrient["nutrient"]["number"] == '205':
-            summary["nutrition"]["carbohydrates"] = nutrient["amount"]
-
-        # Calories (Kcal)
-        elif nutrient["nutrient"]["number"] == '208':
-            summary["nutrition"]["calories"] = nutrient["amount"]
+        for code in possible_codes:
+            if code in amount_by_code and amount_by_code[code] is not None:
+                summary["nutrition"][nutrient_name] = amount_by_code[code]
+                break
 
     return summary
-
 
 def summarize_food(fdcId: int) -> dict:
     """Return a summary of the food item using the given FDC ID.
@@ -102,7 +99,7 @@ def summarize_food(fdcId: int) -> dict:
     try:
         food_item: dict = requests.get(f"{BASE}/food/{fdcId}", params = {"api_key": API_KEY}).json()
         return parse_food_data(food_item)
-    
+
     except Exception as e:
         print(e)
         return None
@@ -126,7 +123,7 @@ def get_food_id(food_query: str, brand_name: str = None) -> int:
         r: dict = requests.get(f"{BASE}/foods/search", params = {"api_key": API_KEY, "query": food_query, "pageSize": 1}).json()
         food_id = r["foods"][0]["fdcId"]
         return food_id
-     
+
     except Exception as e:
         return None
 
