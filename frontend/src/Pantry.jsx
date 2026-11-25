@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import './Pantry.css';
+import './pantry.css';
 import { supabase } from './lib/supabase';
 
 const storage = [
