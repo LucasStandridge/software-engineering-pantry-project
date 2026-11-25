@@ -55,31 +55,29 @@ def parse_food_data(food_item: dict) -> dict:
     summary["canonical_name"] = food_item["description"]
     summary["brand"] = food_item.get("brandOwner") 
 
-    # Loop through the full nutrient list to grab each value
+    # Possible codes for each nutrient. Codes are put in order of priority (ie. prefer '203' for protein, but fallback to '257' if '203' is missing)
+    nutrient_codes = {
+    "protein":       ["203", "257"],
+    "fat":           ["204", "298"],
+    "total_sugars":  ["269", "269.3"],
+    "carbohydrates": ["205", "205.2", "284", "956"],
+    "calories":      ["208", "957", "958"],
+    }
+
+    amount_by_code = {}
+
     for nutrient in food_item["foodNutrients"]:
-        
-        # Specific nutrient IDs are used to grab the relevant nutrition info. See 'nutrient.csv' for the specific codes under 'nutrition_nbr'.
-        # Could also technically 
+        code = nutrient["nutrient"]["number"]
+        amount = nutrient.get("amount")
+        amount_by_code[code] = amount
 
-        # Protein (g)
-        if nutrient["nutrient"]["number"] == '203':                     
-            summary["nutrition"]["protein"] = nutrient["amount"]
+    for nutrient_name, possible_codes in nutrient_codes.items():
+        summary["nutrition"][nutrient_name] = None  # default if no code is found
 
-        # Fat (g)
-        elif nutrient["nutrient"]["number"] == '204':
-            summary["nutrition"]["fat"] = nutrient["amount"]
-
-        # Total Sugars (g)
-        elif nutrient["nutrient"]["number"] == '269':
-            summary["nutrition"]["total_sugars"] = nutrient["amount"]
-
-        # Carbohydrates (g)
-        elif nutrient["nutrient"]["number"] == '205':
-            summary["nutrition"]["carbohydrates"] = nutrient["amount"]
-
-        # Calories (Kcal)
-        elif nutrient["nutrient"]["number"] == '208':
-            summary["nutrition"]["calories"] = nutrient["amount"]
+        for code in possible_codes:
+            if code in amount_by_code and amount_by_code[code] is not None:
+                summary["nutrition"][nutrient_name] = amount_by_code[code]
+                break  # stop at the highest-priority match
 
     return summary
 
