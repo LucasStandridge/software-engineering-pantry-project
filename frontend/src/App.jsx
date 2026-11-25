@@ -2,9 +2,9 @@ import { useState } from 'react'
 import AppLayout from "./AppLayout.jsx";
 import './App.css'
 import { BrowserRouter, Routes, Route, Link, NavLink, useNavigate } from 'react-router-dom';
-import Pantry from './Pantry.jsx';
+import Pantry from './pages/Pantry.jsx';
 import Recipes from './Recipes.jsx';
-import Home from './Home.jsx';
+import Home from './pages/Home.jsx';
 import GroceryList from './GroceryList.jsx'
 import Login from './pages/login.jsx';
 import AuthCallback from "./pages/AuthCallback.jsx";

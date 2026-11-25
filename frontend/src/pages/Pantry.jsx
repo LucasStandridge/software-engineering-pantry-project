@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import './pantry.css';
-import { supabase } from './lib/supabase';
+import { supabase } from '../lib/supabase.js';
 
-const storage = [
-  { name: 'Fridge', count: 12, icon: '🧊' },
-  { name: 'Freezer', count: 8, icon: '❄️' },
-  { name: 'Dry Pantry', count: 24, icon: '🫙' },
+const storageAreas = [
+  { name: 'Fridge', icon: '🧊' },
+  { name: 'Freezer', icon: '❄️' },
+  { name: 'Dry Pantry', icon: '🫙' },
 ];
 
 export default function Pantry() {
@@ -235,12 +235,16 @@ export default function Pantry() {
 
       <aside className="pantry-sidebar">
         <h2>My Inventory</h2>
-        {storage.map((area) => (
+          {storageAreas.map((area) => (
           <div className="storage-item" key={area.name}>
             <span>{area.icon}</span>
             <div>
               <strong>{area.name}</strong>
-              <p>{area.count} items</p>
+              <p>
+                {groceries.filter(
+                  (item) => item.storage_location === area.name
+                ).length} items
+              </p>
             </div>
           </div>
         ))}
