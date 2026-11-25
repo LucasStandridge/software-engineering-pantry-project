@@ -144,3 +144,24 @@
     padding: 20px;
   }
 }
+.app-user-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-profile-picture {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.app-user-profile button {
+  padding: 9px 14px;
+  border: none;
+  border-radius: 8px;
+  background: #24744b;
+  color: white;
+  cursor: pointer;
+}
