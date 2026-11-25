@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { supabase } from "./lib/supabase.js";
 
 async function fetchItems() {
     const response = await fetch("/api/items");
@@ -16,7 +17,7 @@ export default function GroceryList() {
     const [error, setError] = useState(""); // message to show, if any
     const [foodMatches, setFoodMatches] = useState([]);
     const [selectedFood, setSelectedFood] = useState(null);
-    const [location, setLocation] = useState("refrigerator")
+    const [isTransferring, setIsTransferring] = useState(false);
 
     // TODO: disable the button while a request is in flight. Two quick clicks
     // send two POSTs, and the second one bumps the quantity.
@@ -137,44 +138,82 @@ export default function GroceryList() {
     }
 
     const pushItemsToInventory = async () => {
+        if (isTransferring) return;
+
         setError("");
-        for (const item of items) {
-            if (!item.checked_off) continue;
-            const valid_item = transformItemsIntoInventoryUsable(item)
-            try {
+        setIsTransferring(true);
+
+        try {
+            const { data: { user }, error: authError } =
+                await supabase.auth.getUser();
+
+            if (authError || !user) {
+                setError("Please log in before completing your list.");
+                return;
+            }
+
+            for (const item of items) {
+                if (!item.checked_off) continue;
+
+                const valid_item = transformItemsIntoInventoryUsable(
+                    item, user.id
+                );
+
                 const response = await fetch("/api/inventory", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(valid_item),
                 });
-                if (response.ok) {
-                    console.log("Posted:", item);
-                } else {
+
+                if (!response.ok) {
                     const body = await response.json().catch(() => ({}));
-                    setError(body.error || "Something went wrong");
+                    setError(body.error?.message || "Could not save inventory item");
                     return;
                 }
-            } catch (err) {
-                const body = await response.json().catch(() => ({}));
-                setError(body.error?.message || body.error || "Something went wrong");
-                return;
+
+                const removed = await fetch(`/api/items/${item.id}/delete`, {
+                    method: "DELETE",
+                });
+
+                if (!removed.ok) {
+                    setError("Item saved to pantry but could not be removed from the grocery list.");
+                    return;
+                }
             }
+        } catch {
+            setError("Could not complete the grocery list.");
+        } finally {
+            try {
+                setItems(await fetchItems());
+            } catch {
+                setError("Could not refresh the grocery list.");
+            }
+
+            setIsTransferring(false);
         }
     };
 
-    const transformItemsIntoInventoryUsable = (item) => {
-        // Potentially temporary function to make item data usable with 'validate_inventory_data (inventory.py)
-        //Could be replaced if item.data is correctly formatted from API. Otherwise could be done with this function
-        console.log(item.storage_location.location)
-        return{
-            "name" : item.data,
-            "quantity" : item.quantity,
-            "unit" : "temp",
-            "storage_location" : item.storage_location.location,
-            "category" : "dairy",
-            "user_id" : "550e8400-e29b-41d4-a716-446655440000",
-        }
-    }
+    const transformItemsIntoInventoryUsable = (item, userId) => {
+        const location = item.storage_location?.location
+            ?? item.storage_location
+            ?? "refrigerator";
+
+        const storageLocations = {
+            refrigerator: "Fridge",
+            freezer: "Freezer",
+            pantry: "Dry Pantry",
+        };
+
+        return {
+            name: item.name,
+            quantity: item.quantity,
+            unit: "each",
+            storage_location:
+                storageLocations[String(location).toLowerCase()] ?? "Fridge",
+            category: item.data?.food_category || "Other",
+            user_id: userId,
+        };
+    };
 
     const handleLocationChange = async (e, item_id) => {
         const newLocation = e.target.value;
@@ -263,9 +302,14 @@ export default function GroceryList() {
                         </input>
                         <label htmlFor="storage-select">Storage Location:</label>
                         <select id={`storage-select-${item.id}`}
-                        name="location"
-                        value={item.storage_location?.location ?? "Refrigerator"}
-                        onChange={(e) => handleLocationChange(e, item.id)}>
+                            name="location"
+                            value={String(
+                                item.storage_location?.location
+                                ?? item.storage_location
+                                ?? "refrigerator"
+                            ).toLowerCase()}
+                            onChange={(e) => handleLocationChange(e, item.id)}
+                        >
                             <option value="refrigerator">Refrigerator</option>
                             <option value="pantry">Pantry</option>
                             <option value="freezer">Freezer</option>
@@ -273,7 +317,12 @@ export default function GroceryList() {
                     </li>
                 ))}
             </ul>
-            <button onClick = {() => pushItemsToInventory()}n>Complete List</button>
+            <button
+                onClick={pushItemsToInventory}
+                disabled={isTransferring}
+            >
+                {isTransferring ? "Transferring..." : "Complete List"}
+            </button>
         </>
     );
 }
