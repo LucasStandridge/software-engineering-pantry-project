@@ -164,7 +164,7 @@ class TestRemoveToggleAndRead(GroceryListTestCase):
     def test_read_item_by_id_returns_expected_fields(self):
         _, item_id = self.add("milk")
         entry = self.g_list.read_item_by_id(item_id)
-        self.assertEqual(set(entry), {"id", "name", "quantity", "checked_off", "data"})
+        self.assertEqual(set(entry), {"id", "name", "quantity", "checked_off", "storage_location", "data"})
         self.assertEqual(entry["id"], item_id)
 
     def test_returned_data_is_a_copy(self):

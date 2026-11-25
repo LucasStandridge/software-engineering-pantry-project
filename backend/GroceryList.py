@@ -101,6 +101,13 @@ class GroceryList():
                 return item.checked_off
         raise KeyError("ID not found")
 
+    def update_item_storage_location(self, item_id, new_location):
+        """Changes where an item says it is stored"""
+        for item in self.items:
+            if item.id == item_id:
+                item.update_storage_location(new_location)
+                return item.storage_location
+        raise KeyError("ID not found")
     def sort_alphabetically(self):
         #TODO: not implemented. Should return a sorted view (new list) and leave
         #'''items''' intact to preserve original order.

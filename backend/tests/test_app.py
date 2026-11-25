@@ -127,5 +127,32 @@ class TestToggleCheckedRoute(APITestCase):
         self.assertEqual(response.status_code, 404)
         self.assertIn("error", response.json)
 
+class TestStorageLocationRoute(APITestCase):
+
+    def test_storage_location_is_refrigerator_by_default(self):
+        response = self.post_item("milk")
+        item = response.get_json()["item"]
+        self.assertEqual(item["storage_location"], "Refrigerator")
+
+    def test_updates_location_and_returns_it(self):
+        item_id = self.add_and_get_id("milk")
+        response = self.client.patch(f"/api/items/{item_id}/storage-location",
+                                     json={"location": "pantry"})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["storage_location"]["location"], "pantry")
+
+    def test_change_persists(self):
+        item_id = self.add_and_get_id("milk")
+        self.client.patch(f"/api/items/{item_id}/storage-location",
+                          json={"location": "freezer"})
+        item = next(i for i in self.current_items() if i["id"] == item_id)
+        self.assertEqual(item["storage_location"]["location"], "freezer")
+
+    def test_unknown_item_returns_404(self):
+        response = self.client.patch("/api/items/does-not-exist/storage-location",
+                                     json={"location": "pantry"})
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.get_json()["error"], "Item not found")
+
 if __name__ == "__main__":
     unittest.main()
