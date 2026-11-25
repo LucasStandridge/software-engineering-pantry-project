@@ -4,6 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from backend.app import create_app
 from backend.extensions import db
 from backend.models import InventoryItem
+import uuid
 
 def test_create_inventory_item(tmp_path):
     """Verify an inventory item can be saved and retrieved."""
@@ -23,6 +24,8 @@ def test_create_inventory_item(tmp_path):
             quantity=Decimal("1.5"),
             unit="liters",
             storage_location="refrigerator",
+            category="dairy",
+            user_id=uuid.uuid4(),
         )
 
         db.session.add(item)
@@ -59,6 +62,8 @@ def test_update_inventory_item(tmp_path):
             quantity=Decimal("2.00"),
             unit="liters",
             storage_location="refrigerator",
+            category="dairy",
+            user_id=uuid.uuid4(),
         )
 
         db.session.add(item)
@@ -99,6 +104,8 @@ def test_delete_inventory_item(tmp_path):
             quantity=Decimal("12.00"),
             unit="pieces",
             storage_location="refrigerator",
+            category="dairy",
+            user_id=uuid.uuid4(),
         )
 
         db.session.add(item)
@@ -142,6 +149,8 @@ def test_reject_invalid_quantity(tmp_path, invalid_quantity):
             quantity=invalid_quantity,
             unit="liters",
             storage_location="refrigerator",
+            category="dairy",
+            user_id=uuid.uuid4(),
         )
 
         db.session.add(item)
@@ -158,6 +167,8 @@ def test_reject_invalid_quantity(tmp_path, invalid_quantity):
     "quantity",
     "unit",
     "storage_location",
+    "category",
+    "user_id",
 ])
 def test_reject_missing_required_fields(tmp_path, missing_field):
     """Verify required inventory fields cannot be NULL."""
@@ -177,6 +188,8 @@ def test_reject_missing_required_fields(tmp_path, missing_field):
             "quantity": Decimal("1.00"),
             "unit": "liters",
             "storage_location": "refrigerator",
+            "category": "dairy",
+            "user_id": uuid.uuid4(),
         }
 
         item_data[missing_field] = None
